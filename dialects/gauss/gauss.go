@@ -1,3 +1,3 @@
-package mysql
+package gauss
 
-import _ "github.com/go-sql-driver/mysql"
+import _ "gitee.com/opengauss/openGauss-connector-go-pq"

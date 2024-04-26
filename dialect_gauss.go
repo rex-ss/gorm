@@ -11,29 +11,29 @@ import (
 	"unicode/utf8"
 )
 
-var mysqlIndexRegex = regexp.MustCompile(`^(.+)\((\d+)\)$`)
+var opengaussIndexRegex = regexp.MustCompile(`^(.+)\((\d+)\)$`)
 
-type mysql struct {
+type opengauss struct {
 	commonDialect
 }
 
 func init() {
-	RegisterDialect("mysql", &mysql{})
+	RegisterDialect("opengauss", &opengauss{})
 }
 
-func (mysql) GetName() string {
-	return "mysql"
+func (opengauss) GetName() string {
+	return "opengauss"
 }
 
-func (mysql) Quote(key string) string {
+func (opengauss) Quote(key string) string {
 	return fmt.Sprintf("`%s`", key)
 }
 
-// Get Data Type for MySQL Dialect
-func (s *mysql) DataTypeOf(field *StructField) string {
+// Get Data Type for opengauss Dialect
+func (s *opengauss) DataTypeOf(field *StructField) string {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field, s)
 
-	// MySQL allows only one auto increment column per table, and it must
+	// opengauss allows only one auto increment column per table, and it must
 	// be a KEY column.
 	if _, ok := field.TagSettingsGet("AUTO_INCREMENT"); ok {
 		if _, ok = field.TagSettingsGet("INDEX"); !ok && !field.IsPrimaryKey {
@@ -120,7 +120,7 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 	}
 
 	if sqlType == "" {
-		panic(fmt.Sprintf("invalid sql type %s (%s) in field %s for mysql", dataValue.Type().Name(), dataValue.Kind().String(), field.Name))
+		panic(fmt.Sprintf("invalid sql type %s (%s) in field %s for opengauss", dataValue.Type().Name(), dataValue.Kind().String(), field.Name))
 	}
 
 	if strings.TrimSpace(additionalType) == "" {
@@ -129,17 +129,17 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 	return fmt.Sprintf("%v %v", sqlType, additionalType)
 }
 
-func (s mysql) RemoveIndex(tableName string, indexName string) error {
+func (s opengauss) RemoveIndex(tableName string, indexName string) error {
 	_, err := s.db.Exec(fmt.Sprintf("DROP INDEX %v ON %v", indexName, s.Quote(tableName)))
 	return err
 }
 
-func (s mysql) ModifyColumn(tableName string, columnName string, typ string) error {
+func (s opengauss) ModifyColumn(tableName string, columnName string, typ string) error {
 	_, err := s.db.Exec(fmt.Sprintf("ALTER TABLE %v MODIFY COLUMN %v %v", tableName, columnName, typ))
 	return err
 }
 
-func (s mysql) LimitAndOffsetSQL(limit, offset interface{}) (sql string, err error) {
+func (s opengauss) LimitAndOffsetSQL(limit, offset interface{}) (sql string, err error) {
 	if limit != nil {
 		parsedLimit, err := s.parseInt(limit)
 		if err != nil {
@@ -162,17 +162,17 @@ func (s mysql) LimitAndOffsetSQL(limit, offset interface{}) (sql string, err err
 	return
 }
 
-func (s mysql) HasForeignKey(tableName string, foreignKeyName string) bool {
+func (s opengauss) HasForeignKey(tableName string, foreignKeyName string) bool {
 	var count int
 	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
 	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=? AND TABLE_NAME=? AND CONSTRAINT_NAME=? AND CONSTRAINT_TYPE='FOREIGN KEY'", currentDatabase, tableName, foreignKeyName).Scan(&count)
 	return count > 0
 }
 
-func (s mysql) HasTable(tableName string) bool {
+func (s opengauss) HasTable(tableName string) bool {
 	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
 	var name string
-	// allow mysql database name with '-' character
+	// allow opengauss database name with '-' character
 	if err := s.db.QueryRow(fmt.Sprintf("SHOW TABLES FROM `%s` WHERE `Tables_in_%s` = ?", currentDatabase, currentDatabase), tableName).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return false
@@ -183,7 +183,7 @@ func (s mysql) HasTable(tableName string) bool {
 	}
 }
 
-func (s mysql) HasIndex(tableName string, indexName string) bool {
+func (s opengauss) HasIndex(tableName string, indexName string) bool {
 	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
 	if rows, err := s.db.Query(fmt.Sprintf("SHOW INDEXES FROM `%s` FROM `%s` WHERE Key_name = ?", tableName, currentDatabase), indexName); err != nil {
 		panic(err)
@@ -193,7 +193,7 @@ func (s mysql) HasIndex(tableName string, indexName string) bool {
 	}
 }
 
-func (s mysql) HasColumn(tableName string, columnName string) bool {
+func (s opengauss) HasColumn(tableName string, columnName string) bool {
 	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
 	if rows, err := s.db.Query(fmt.Sprintf("SHOW COLUMNS FROM `%s` FROM `%s` WHERE Field = ?", tableName, currentDatabase), columnName); err != nil {
 		panic(err)
@@ -203,16 +203,16 @@ func (s mysql) HasColumn(tableName string, columnName string) bool {
 	}
 }
 
-func (s mysql) CurrentDatabase() (name string) {
+func (s opengauss) CurrentDatabase() (name string) {
 	s.db.QueryRow("SELECT DATABASE()").Scan(&name)
 	return
 }
 
-func (mysql) SelectFromDummyTable() string {
+func (opengauss) SelectFromDummyTable() string {
 	return "FROM DUAL"
 }
 
-func (s mysql) BuildKeyName(kind, tableName string, fields ...string) string {
+func (s opengauss) BuildKeyName(kind, tableName string, fields ...string) string {
 	keyName := s.commonDialect.BuildKeyName(kind, tableName, fields...)
 	if utf8.RuneCountInString(keyName) <= 64 {
 		return keyName
@@ -231,8 +231,8 @@ func (s mysql) BuildKeyName(kind, tableName string, fields ...string) string {
 }
 
 // NormalizeIndexAndColumn returns index name and column name for specify an index prefix length if needed
-func (mysql) NormalizeIndexAndColumn(indexName, columnName string) (string, string) {
-	submatch := mysqlIndexRegex.FindStringSubmatch(indexName)
+func (opengauss) NormalizeIndexAndColumn(indexName, columnName string) (string, string) {
+	submatch := opengaussIndexRegex.FindStringSubmatch(indexName)
 	if len(submatch) != 3 {
 		return indexName, columnName
 	}
@@ -241,6 +241,6 @@ func (mysql) NormalizeIndexAndColumn(indexName, columnName string) (string, stri
 	return indexName, columnName
 }
 
-func (mysql) DefaultValueStr() string {
+func (opengauss) DefaultValueStr() string {
 	return "VALUES()"
 }
