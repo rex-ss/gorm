@@ -33,8 +33,7 @@ func (opengauss) Quote(key string) string {
 func (s *opengauss) DataTypeOf(field *StructField) string {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field, s)
 
-	// opengauss allows only one auto increment column per table, and it must
-	// be a KEY column.
+	// opengauss allows only one auto increment column per table, and it must be a KEY column.
 	if _, ok := field.TagSettingsGet("AUTO_INCREMENT"); ok {
 		if _, ok = field.TagSettingsGet("INDEX"); !ok && !field.IsPrimaryKey {
 			field.TagSettingsDelete("AUTO_INCREMENT")
