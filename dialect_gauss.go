@@ -26,7 +26,7 @@ func (opengauss) GetName() string {
 }
 
 func (opengauss) Quote(key string) string {
-	return fmt.Sprintf("`%s`", key)
+	return fmt.Sprintf("%s", key)
 }
 
 // Get Data Type for opengauss Dialect
