@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"github.com/rex-ss/gorm"
 )
 
 type User struct {
@@ -284,8 +284,8 @@ func getPreparedUser(name string, role string) *User {
 }
 
 type Panda struct {
-    Number int64 `gorm:"unique_index:number"`
-    Name string `gorm:"column:name;type:varchar(255);default:null"`
+	Number int64  `gorm:"unique_index:number"`
+	Name   string `gorm:"column:name;type:varchar(255);default:null"`
 }
 
 func runMigration() {

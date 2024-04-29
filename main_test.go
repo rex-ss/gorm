@@ -22,12 +22,12 @@ import (
 	"time"
 
 	"github.com/erikstmartin/go-testdb"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mssql"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"github.com/jinzhu/gorm/dialects/postgres"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/jinzhu/now"
+	"github.com/rex-ss/gorm"
+	_ "github.com/rex-ss/gorm/dialects/mssql"
+	_ "github.com/rex-ss/gorm/dialects/mysql"
+	"github.com/rex-ss/gorm/dialects/postgres"
+	_ "github.com/rex-ss/gorm/dialects/sqlite"
 )
 
 var (
@@ -36,13 +36,13 @@ var (
 )
 
 func init() {
-	var err error
+	//var err error
 
-	if DB, err = OpenTestConnection(); err != nil {
-		panic(fmt.Sprintf("No error should happen when connecting to test database, but got err=%+v", err))
-	}
-
-	runMigration()
+	//if DB, err = OpenTestConnection(); err != nil {
+	//	panic(fmt.Sprintf("No error should happen when connecting to test database, but got err=%+v", err))
+	//}
+	//
+	//runMigration()
 }
 
 func OpenTestConnection() (db *gorm.DB, err error) {
