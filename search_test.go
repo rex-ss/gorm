@@ -50,3 +50,26 @@ func TestWhereCloneCorruption(t *testing.T) {
 		})
 	}
 }
+
+type Ads struct {
+	Name string
+}
+
+func TestExportImportJobTemp(t *testing.T) {
+	//var dd = []*Ads{&Ads{"h"}}
+
+	dd := make([]*Ads, 0, 10)
+	dd = append(dd, &Ads{"h"})
+
+	vo := reflect.ValueOf(&dd)
+	fmt.Println(vo.Kind())
+	if vo.Kind() == reflect.Ptr {
+		vo = vo.Elem()
+	}
+	fmt.Println(vo.Kind())
+	if vo.Kind() == reflect.Slice {
+		vo.Len()
+		fmt.Println(vo.Type().Kind())
+		fmt.Println(vo.Cap())
+	}
+}
